@@ -1,0 +1,25 @@
+﻿.ds-back2top{
+}
+.ds-back2top-layout{
+	position: fixed;
+	_position:absolute;
+	_top:auto;
+	_top: expression(eval(( document.documentElement && document.documentElement.scrollTop || document.body.scrollTop)+(document.documentElement && document.documentElement.clientHeight || document.body.clientHeight)-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)));
+}
+.ds-back2top-ui{
+	width: 1em;
+	padding: 3px;
+	word-wrap: break-word;
+	font-size: 12px;
+	text-align: center;
+	white-space: normal;
+	right: 5px;
+	bottom: 5px;
+	color: #fff;
+	background-color: #DBCC9F;
+	border-radius: 2px;
+	cursor: pointer;
+	line-height:14px;
+}
+
+.ds-back2top{ } .ds-back2top-layout{ position: fixed; _position:absolute; _top:auto; _top: expression(eval(( document.documentElement && document.documentElement.scrollTop || document.body.scrollTop)+(document.documentElement && document.documentElement.clientHeight || document.body.clientHeight)-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0))); } .ds-back2top-ui{ width: 1em; padding: 3px; word-wrap: break-word; font-size: 12px; text-align: center; white-space: normal; right: 5px; bottom: 5px; color: #fff; background-color: #DBCC9F; border-radius: 2px; cursor: pointer; line-height:14px; }

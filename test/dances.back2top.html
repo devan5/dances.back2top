@@ -1,0 +1,104 @@
+﻿<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+	<title>.back2top</title>
+	<meta charset="UTF-8">
+	<meta name="point" content="史上最强 back2Top">
+	<link rel="stylesheet" type="text/css" href="../css/base.v10.final.min.css" media="all">
+	<style type="text/css">
+		body{
+			height: 5000px;
+		}
+		.d-test{
+			float: left;
+			display: inline;
+			background-color: #ccc;
+			margin: 0 10px 0 0;
+			box-shadow: 3px 0px 3px #ccc;
+			width: 5em;
+		}
+		.d-test-01{
+
+		}
+		.d-test-02{
+
+		}
+		.d-test-03{
+
+		}
+		.current{
+			background-color: #FF91B2;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../dances.amd/dances.amd.js"></script>
+</head>
+<body>
+	<!--
+		<div class="ds-back2top ds-back2top-layout ds-back2top-ui" title="返回顶部">
+		返回顶部⇡
+		</div>
+	-->
+
+	<p class="d-test" style="padding:10px;">
+		<input type="button" value="恢复" onclick="dances.back2top.on()">
+		<br>
+		<input type="button" value="暂停" onclick="dances.back2top.off()">
+	</p>
+	<p class="d-test d-test-01 current" data-num="1200">正数</p>
+	<p class="d-test d-test-01 " data-num="350">小于视口正数</p>
+	<p class="d-test d-test-02 " data-num="0.3">小数</p>
+	<p class="d-test d-test-03 " data-num="-1500">负数</p>
+
+	<script type="text/javascript">
+		define.amd.jQuery = true;
+		define.amd.dancesDom = true;
+		define.amd.dancesJs = true;
+
+		// 测试环境
+		require(["../../../dances.dom/dances.dom", "../js/jquery-1.7.2.min"], function(dances, $){
+
+			var scrollEl = dances.uAgent.webkit ? document.body : document.documentElement
+			;
+
+			$(".d-test").each(function(){
+				var v = this.getAttribute("data-num"),
+					$this = $(this)
+					;
+
+				if(v){
+					v = v * 1;
+
+					if(0 < v && v < 1){
+						$this.css("height", scrollEl.scrollHeight * v);
+
+					}else if(v < 0){
+						$this.css("height", scrollEl.scrollHeight + v);
+
+					}else{
+						$this.css("height", v);
+					}
+				}
+
+			});
+
+		});
+
+		// back2top
+		define.amd.back2top = true;
+		require(["../../../dances.dom/dances.dom", "../../../dances.javascript/dances.javascript", "../dances.back2top"], function(dances5, dances, _){
+
+			var h = $(".d-test").filter(".current").attr("data-num") * 1;
+
+			_({
+				speed    : 300,
+				effect   : false,
+				height   : isNaN(h) ? 0 : h,
+				disableUI: 0
+			});
+
+		});
+	</script>
+
+</body>
+</html>
