@@ -35,7 +35,7 @@ with dances.plugins
 		
 		"2.0": [
 			+ 适配 dances.amd
-			+ TODO 去除 base.css 功能不正常
+			+ 解耦 base.css
 		]
 	}
 
@@ -189,13 +189,20 @@ _______*/
 		clearTimeout(promiseScroll);
 
 		promiseScroll = setTimeout(function(){
-			var h = getHashKey(currentWindow);
+			var
+				h = getHashKey(currentWindow),
 
-			h && forEach(winAio[h].coreArr, function(_back){
-				_back();
+				iWin = winAio[h],
+
+				scrollEl = iWin.scrollEl,
+				scrollTop = scrollEl.scrollTop
+			;
+
+			h && forEach(iWin.coreArr, function(_back){
+				_back(scrollTop);
 			});
 
-		}, 25);
+		}, 5);
 
 	};
 
@@ -269,37 +276,42 @@ _______*/
 
 				// 注入 css
 				ss =
-					'.dances-back2top-hide .dances-back2top{' +
+					'.dances-back2top-pause .dances-back2top{' +
 						'display: none;' +
 					'}'+
+
+					'.dances-back2top-hide{' +
+						'display: none;' +
+					'}'+
+
 					'.dances-back2top{' +
 					'right: 5px; bottom: 5px;' +
-					((dances.uAgent.msie && dances.uAgent.msie < 7)
-						?
+					((dances.uAgent.msie && dances.uAgent.msie < 7) ?
 						'position: absolute;' +
 						'top: expression(eval(( document.documentElement && document.documentElement.scrollTop || document.body.scrollTop)+(document.documentElement && document.documentElement.clientHeight || document.body.clientHeight)-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)-5));'
-						:
+							:
 						'position: fixed;'
 						) +
 					"}"
 				;
+
 				dances.addCss((
 					conf.disableUI ?
-						ss
-						: ss +=
-						  '.dances-back2top-ui{ ' +
-						  'width: 1em; ' +
-						  'padding: 3px; ' +
-						  'word-wrap: break-word; ' +
-						  'font-size: 12px; ' +
-						  'text-align: center; ' +
-						  'white-space: normal; ' +
-						  'color: #fff; ' +
-						  'background-color: #DBCC9F; ' +
-						  'border-radius: 2px; ' +
-						  'cursor: pointer; ' +
-						  'line-height:14px; ' +
-						  '}'
+						ss :
+						ss +=
+						'.dances-back2top-ui{ ' +
+							'width: 1em; ' +
+							'padding: 3px; ' +
+							'word-wrap: break-word; ' +
+							'font-size: 12px; ' +
+							'text-align: center; ' +
+							'white-space: normal; ' +
+							'color: #fff; ' +
+							'background-color: #DBCC9F; ' +
+							'border-radius: 2px; ' +
+							'cursor: pointer; ' +
+							'line-height:14px; ' +
+						'}'
 					), currentWindow.document.getElementsByTagName("head")[0])
 				;
 
@@ -313,7 +325,7 @@ _______*/
 
 				text     : "string",
 				title    : "string",
-				speed    : "number",
+				backTime    : "number",
 				height   : "number",
 				effect   : "boolean",
 				disableUI: "boolean",
@@ -322,7 +334,7 @@ _______*/
 			}, {
 				text     : "返回顶部⇡",
 				title    : "返回顶部",
-				speed    : 0,
+				backTime    : 0,
 				height   : winAio[this.currentWinHash].scrollEl.scrollHeight / 2,
 				effect   : false,
 				disableUI: false
@@ -334,7 +346,7 @@ _______*/
 			this.setHPoint(conf.height);
 
 			backEl = dances.El(
-				'<span id="dances-back2top" class="dances-back2top dances-back2top-ui none" title="返回顶部">' +
+				'<span id="dances-back2top" class="dances-back2top dances-back2top-ui dances-back2top-hide" title="返回顶部">' +
 				'返回顶部⇡' +
 				'</span>'
 			);
@@ -344,7 +356,7 @@ _______*/
 			this.$backEl =
 			$(backEl).bind("click.dances_back2top", function(){
 				$(winAio[_this.currentWinHash].scrollEl).animate({scrollTop: 0}, {
-					duration: conf.speed,
+					duration: conf.backTime,
 
 					complete: function(){
 						"function" === typeof conf.callback && conf.callback(backTop);
@@ -364,7 +376,6 @@ _______*/
 
 					iWin = winAio[_this.currentWinHash],
 
-					scrollEl = iWin.scrollEl,
 					$backEl = _this.$backEl,
 
 					pointH = _this.pointH
@@ -372,13 +383,13 @@ _______*/
 				;
 
 				if(_this.conf.effect){
-					return function(){
+					return function(scrollTop){
 						var
 							degree
 						;
 
-						$backEl.css("opacity", 0).removeClass("none");
-						degree = scrollEl.scrollTop / (pointH - iWin.viewH);
+						$backEl.css("opacity", 0).removeClass("dances-back2top-hide");
+						degree = scrollTop / (pointH - iWin.viewH);
 						degree < 1 ?
 							$backEl.css("opacity", degree) :
 							$backEl.css("opacity", 1)
@@ -387,15 +398,15 @@ _______*/
 					};
 
 				}else{
-					return function(){
-						if(scrollEl.scrollTop > pointH - iWin.viewH){
+					return function(scrollTop){
+						if(scrollTop > pointH - iWin.viewH){
 							if(!bShow){
-								$backEl.removeClass("none");
+								$backEl.removeClass("dances-back2top-hide");
 								bShow = true;
 							}
 						}else{
 							if(bShow){
-								$backEl.addClass("none");
+								$backEl.addClass("dances-back2top-hide");
 								bShow = false;
 							}
 						}
@@ -415,6 +426,9 @@ _______*/
 			});
 
 			this.init = function(){ return this; };
+
+			// 如果有将来, 可以利用 bInit 状态, 后实例化
+			this.bInit = true;
 
 			return this;
 		},
@@ -531,7 +545,7 @@ _______*/
 
 		if(iWin && !iWin.bOn){
 			fBind();
-			$(currentWindow.document.body).removeClass("dances-back2top-hide");
+			$(currentWindow.document.body).removeClass("dances-back2top-pause");
 			iWin.bOn = true;
 		}
 
@@ -548,7 +562,7 @@ _______*/
 		if(iWin && iWin.bOn){
 			fUnbind();
 			if(bClear){
-				$(currentWindow.document.body).addClass("dances-back2top-hide");
+				$(currentWindow.document.body).addClass("dances-back2top-pause");
 			}
 			iWin.bOn = false;
 		}

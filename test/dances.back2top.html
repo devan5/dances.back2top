@@ -4,7 +4,6 @@
 	<title>.back2top</title>
 	<meta charset="UTF-8">
 	<meta name="point" content="史上最强 back2Top">
-	<link rel="stylesheet" type="text/css" href="../css/base.v10.final.min.css" media="all">
 	<style type="text/css">
 		body{
 			height: 5000px;
@@ -47,7 +46,7 @@
 	</p>
 	<p class="d-test d-test-01 " data-num="1200">正数</p>
 	<p class="d-test d-test-01 " data-num="350">小于视口正数</p>
-	<p class="d-test d-test-02 current" data-num="0.3">小数</p>
+	<p class="d-test d-test-02 current" data-num="0.3">小数(百分比)</p>
 	<p class="d-test d-test-03 " data-num="-1500">负数</p>
 
 	<script type="text/javascript">
@@ -91,7 +90,7 @@
 			var h = $(".d-test").filter(".current").attr("data-num") - 0;
 
 			_({
-				speed    : 300,
+				backTime    : 300,
 				effect   : false,
 				height   : isNaN(h) ? 0 : h,
 				disableUI: 0
