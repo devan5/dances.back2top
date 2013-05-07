@@ -79,10 +79,10 @@ _______*/
 		BackTop,
 		backTop,
 		fListenScroll,
+		promiseScroll,
 
 		currentWindow = window,
 		winAio = {},
-		winArr = [currentWindow],
 		winTouchArr = [],
 
 		fValidArgs,
@@ -91,6 +91,8 @@ _______*/
 		fUnbind,
 
 		hashKey = Math.random(),
+
+		getHashKey,
 
 		create = Object.create || (function(){
 
@@ -132,7 +134,30 @@ _______*/
 
 			}
 
+	;
+
+	getHashKey = function(win){
+		var
+			len = winTouchArr.length,
+			item,
+
+			expect
 		;
+
+		if(top === win.top){
+			win = currentWindow;
+		}
+
+		while(len--){
+			item = winTouchArr[len];
+			if(win === item[0]){
+				expect = item[1];
+				break;
+			}
+		}
+
+		return expect;
+	};
 
 	fValidArgs = function(conf, requireType, defaultConf){
 		var
@@ -161,25 +186,35 @@ _______*/
 	};
 
 	fListenScroll = function(){
+		clearTimeout(promiseScroll);
 
-		// TODO 加入调用时间限制
-		forEach(winAio[currentWindow.back2top_hashKey].coreArr, function(_back){
-			_back();
-		});
+		promiseScroll = setTimeout(function(){
+			var h = getHashKey(currentWindow);
 
+			h && forEach(winAio[h].coreArr, function(_back){
+				_back();
+			});
+
+		}, 25);
 
 	};
 
 	fBind = function(){
+		var
+			h = getHashKey(currentWindow)
+		;
+
 		$(currentWindow)
 			// 绑定 滚动事件
 			.bind("scroll.dances_back2top", fListenScroll)
 			// 绑定 resize事件
 			.bind("resize.dances_back2top", function(){
-				winAio[currentWindow.back2top_hashKey].viewH = dances.getViewSize().height;
+				winAio[h].viewH = dances.getViewSize().height;
 				fListenScroll();
 			})
 		;
+
+
 	};
 
 	fUnbind = function(){
@@ -192,54 +227,61 @@ _______*/
 	BackTop = {
 		init: function(conf){
 			var
-				bPristine = true,
-
-				base = winTouchArr,
-				len = base.length,
-
 				ss,
-
 				backEl,
+
+				h,
 
 				_this = this
 			;
 
 			// 嗅探 window 是否初始化
-			while(len--){
-				if(currentWindow === base[len]){
-					bPristine = false;
-					break;
-				}
-			}
+			h = getHashKey(currentWindow);
 
-			if(bPristine){
-				base.push(currentWindow);
+			if(h){
+				this.currentWinHash = h;
+
+			}else{
+
+				this.currentWinHash = hashKey;
+
+				winTouchArr.push([currentWindow, hashKey]);
+
 
 				// hashKey_Aio
 				winAio[hashKey] = {
 					coreArr: [],
 
+					scrollEl: dances.uAgent.webkit ?
+						currentWindow.document.body :
+						currentWindow.document.documentElement,
+
 					// 获取视口高度
-					viewH: dances.getViewSize().height
+					viewH   : dances.getViewSize().height,
+
+					bOn: true
 				};
-				currentWindow.back2top_hashKey = hashKey;
-				hashKey++;
 
 				// 注册
 				fBind();
 
+				hashKey++;
+
 				// 注入 css
 				ss =
-				'.dances-back2top{' +
-				'right: 5px; bottom: 5px;' +
-				((dances.uAgent.msie && dances.uAgent.msie < 7)
-					?
-					'position: absolute;' +
-					'top: expression(eval(( document.documentElement && document.documentElement.scrollTop || document.body.scrollTop)+(document.documentElement && document.documentElement.clientHeight || document.body.clientHeight)-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)-5));'
-					:
-					'position: fixed;'
-					) +
-				"}"
+					'.dances-back2top-hide .dances-back2top{' +
+						'display: none;' +
+					'}'+
+					'.dances-back2top{' +
+					'right: 5px; bottom: 5px;' +
+					((dances.uAgent.msie && dances.uAgent.msie < 7)
+						?
+						'position: absolute;' +
+						'top: expression(eval(( document.documentElement && document.documentElement.scrollTop || document.body.scrollTop)+(document.documentElement && document.documentElement.clientHeight || document.body.clientHeight)-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)-5));'
+						:
+						'position: fixed;'
+						) +
+					"}"
 				;
 				dances.addCss((
 					conf.disableUI ?
@@ -263,12 +305,6 @@ _______*/
 
 			}
 
-			// 第一次调用 .back2top 去获取滚动条元素
-			this.scrollEl = dances.uAgent.webkit ?
-				currentWindow.document.body :
-				currentWindow.document.documentElement
-			;
-
 			// 拷贝原始配置
 			this.argsBak = dances.extend({}, conf);
 
@@ -287,8 +323,7 @@ _______*/
 				text     : "返回顶部⇡",
 				title    : "返回顶部",
 				speed    : 0,
-//				height   : scrollEl.scrollHeight / 2,
-				height   : 500,
+				height   : winAio[this.currentWinHash].scrollEl.scrollHeight / 2,
 				effect   : false,
 				disableUI: false
 			});
@@ -308,7 +343,7 @@ _______*/
 
 			this.$backEl =
 			$(backEl).bind("click.dances_back2top", function(){
-				$(_this.scrollEl).animate({scrollTop: 0}, {
+				$(winAio[_this.currentWinHash].scrollEl).animate({scrollTop: 0}, {
 					duration: conf.speed,
 
 					complete: function(){
@@ -327,10 +362,10 @@ _______*/
 				var
 					bShow,
 
-					iWin = winAio[currentWindow.back2top_hashKey],
+					iWin = winAio[_this.currentWinHash],
 
+					scrollEl = iWin.scrollEl,
 					$backEl = _this.$backEl,
-					scrollEl = _this.scrollEl,
 
 					pointH = _this.pointH
 
@@ -369,7 +404,9 @@ _______*/
 
 			})(this);
 
-			winAio[currentWindow.back2top_hashKey].coreArr.push(this.core);
+			winAio[this.currentWinHash].coreArr.push(this.core);
+
+			this.bRegisted = true;
 
 			// 页面加载后迅速执行一次
 			$(function(){
@@ -377,9 +414,7 @@ _______*/
 				fListenScroll();
 			});
 
-			this.init = function(){
-				return this;
-			};
+			this.init = function(){ return this; };
 
 			return this;
 		},
@@ -389,7 +424,7 @@ _______*/
 			var
 				pointH,
 
-				scrollEl = this.scrollEl
+				scrollEl = winAio[this.currentWinHash].scrollEl
 			;
 
 			// 计算 百分比
@@ -416,22 +451,56 @@ _______*/
 			return this;
 		},
 
-		update: function(){
-			this.setHPoint(this.argsBak);
+		on: function(){
+			var
+				iWin = winAio[this.currentWinHash]
+			;
+
+			if(!this.bRegisted){
+				iWin.coreArr.push(this.core);
+				this.bRegisted = true;
+			}
+
 			return this;
 		},
 
-		on: function(){
-
-		},
-
 		off: function(){
+			var
+				iWin = winAio[this.currentWinHash],
+				base = iWin.coreArr,
+				len = base.length
+			;
 
+			if(this.bRegisted){
+				while(len--){
+					if(base[len] === this.core){
+						base.splice(len, 1);
+						break;
+					}
+				}
+				this.bRegisted = false;
+			}
+
+			return this;
 		},
 
 		toggle: function(){
+			this.bRegisted ?
+				this.off() :
+				this.on()
+			;
+			return this;
+		},
 
+		// 二次 变更 配置 某些配置
+		update: function(conf){
+			conf = conf || {};
+
+			"number" === typeof conf.height && this.setHPoint(conf.height);
+
+			return this;
 		}
+
 	};
 
 	backTop = function(){
@@ -445,50 +514,58 @@ _______*/
 	};
 
 	backTop.switchWindow = function(_win){
-		var
-			base = winArr,
-			len = base.length,
 
-			bPristine = true
-		;
-
-		if(currentWindow.top === top){
-
-			while(len--){
-				if(base[len] === _win){
-					bPristine = false;
-					break;
-				}
-			}
-
-			bPristine && base.push(_win);
-
+		if(_win.top === top){
 			currentWindow = _win;
-		}
-
-		return backTop;
-	};
-
-	backTop.resume = function(){
-		if(!this.bOn){
-			fBind();
-			this.bOn = true;
 		}
 
 		return this;
 	};
 
-	backTop.pause = function(){
-		if(this.bOn){
+	// 恢复 当前 window back2top
+	backTop.resume = function(){
+		var
+			h = getHashKey(currentWindow),
+			iWin = h && winAio[h]
+		;
+
+		if(iWin && !iWin.bOn){
+			fBind();
+			$(currentWindow.document.body).removeClass("dances-back2top-hide");
+			iWin.bOn = true;
+		}
+
+		return this;
+	};
+
+	// 暂停 当前 window back2top
+	backTop.pause = function(bClear){
+		var
+			h = getHashKey(currentWindow),
+			iWin = h && winAio[h]
+		;
+
+		if(iWin && iWin.bOn){
 			fUnbind();
-			this.bOn = false;
+			if(bClear){
+				$(currentWindow.document.body).addClass("dances-back2top-hide");
+			}
+			iWin.bOn = false;
 		}
 
 		return this;
 	};
 
 	backTop.toggle = function(){
-		this.bOn ? this.off() : this.on();
+		var
+			h = getHashKey(currentWindow),
+			iWin = h && winAio[h]
+		;
+
+		if(iWin){
+			iWin.bOn ? iWin.pause() : iWin.resume();
+		}
+
 		return this;
 	};
 
