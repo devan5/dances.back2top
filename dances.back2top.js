@@ -299,18 +299,22 @@ _______*/
 					conf.disableUI ?
 						ss :
 						ss +=
-						'.dances-back2top-ui{ ' +
-							'width: 1em; ' +
-							'padding: 3px; ' +
-							'word-wrap: break-word; ' +
-							'font-size: 12px; ' +
-							'text-align: center; ' +
-							'white-space: normal; ' +
-							'color: #fff; ' +
-							'background-color: #DBCC9F; ' +
-							'border-radius: 2px; ' +
-							'cursor: pointer; ' +
-							'line-height:14px; ' +
+						'.dances-back2top-ui:link,' +
+						'.dances-back2top-ui:visited,' +
+						'.dances-back2top-ui:hover{' +
+							'color: #fff;' +
+						'}' +
+						'.dances-back2top-ui{' +
+							'width: 1em;' +
+							'padding: 3px;' +
+							'word-wrap: break-word;' +
+							'font-size: 12px;' +
+							'text-align: center;' +
+							'white-space: normal;' +
+							'background-color: #DBCC9F;' +
+							'border-radius: 2px;' +
+							'cursor: pointer;' +
+							'line-height:14px;' +
 						'}'
 					), currentWindow.document.getElementsByTagName("head")[0])
 				;
@@ -345,16 +349,18 @@ _______*/
 			// 计算
 			this.setHPoint(conf.height);
 
+
+
 			backEl = dances.El(
-				'<span id="dances-back2top" class="dances-back2top dances-back2top-ui dances-back2top-hide" title="返回顶部">' +
+				'<a href="/返回顶部" class="dances-back2top dances-back2top-ui ' + (conf.effect ? "" : "dances-back2top-hide") + '" title="返回顶部">' +
 				'返回顶部⇡' +
-				'</span>'
+				'</a>'
 			);
 
 			this.backEl = backEl;
 
 			this.$backEl =
-			$(backEl).bind("click.dances_back2top", function(){
+			$(backEl).bind("click.dances_back2top", function(e){
 				$(winAio[_this.currentWinHash].scrollEl).animate({scrollTop: 0}, {
 					duration: conf.backTime,
 
@@ -363,6 +369,9 @@ _______*/
 					}
 
 				});
+
+				e.preventDefault();
+
 			})
 			;
 
@@ -382,23 +391,21 @@ _______*/
 
 				;
 
-				if(_this.conf.effect){
-					return function(scrollTop){
+				return function(scrollTop){
+
+					if(_this.conf.effect){
 						var
 							degree
 						;
 
-						$backEl.css("opacity", 0).removeClass("dances-back2top-hide");
+//						$backEl.css("opacity", 0).removeClass("dances-back2top-hide");
 						degree = scrollTop / (pointH - iWin.viewH);
 						degree < 1 ?
 							$backEl.css("opacity", degree) :
 							$backEl.css("opacity", 1)
 						;
 
-					};
-
-				}else{
-					return function(scrollTop){
+					}else{
 						if(scrollTop > pointH - iWin.viewH){
 							if(!bShow){
 								$backEl.removeClass("dances-back2top-hide");
@@ -410,8 +417,9 @@ _______*/
 								bShow = false;
 							}
 						}
-					};
-				}
+					}
+				};
+
 
 			})(this);
 
